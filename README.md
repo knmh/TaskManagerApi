@@ -1,185 +1,435 @@
-# Task Manager 
+# 📋 Task CRUD Module
 
-A REST API for managing tasks with JWT authentication, role-based access (admin, user, moderator), and admin capabilities to change user roles. Built with Express.js, TypeScript, TypeORM, and PostgreSQL.
+This branch (`feature/task-crud`) contains the complete CRUD (Create, Read, Update, Delete) operations for managing tasks in the Task Manager API.
 
-## Features
+---
 
-- User signup & login with JWT (15 min token expiry)
-- Authentication via `requiredAuth` middleware
-- Role-based authorization via `requiredRole`
-- Full CRUD for users (only admin can delete)
-- Full CRUD for tasks (each user sees/edits only their own tasks)
-- Admin can change roles of other users (`PATCH /api/v1/admin/users/:userId/role`)
-- Centralized error handling (`AppError` + `errorHandler`)
-- `catchAsync` wrapper to prevent server crashes from async errors
-- Migration support using TypeORM CLI
+## 📦 What's included?
 
-## Tech Stack
+* Full CRUD operations for tasks
+* **Ownership validation** – each user can only access their own tasks
+* Integration with authentication (`requiredAuth` middleware)
+* Task status:
 
-- Node.js + Express 5
-- TypeScript
-- TypeORM (with PostgreSQL)
-- jsonwebtoken (JWT)
-- bcryptjs (password hashing)
-- dotenv (environment variables)
+  * `pending`
+  * `in-progress`
+  * `completed`
+* Task priority:
 
-## Installation & Setup
+  * `low`
+  * `medium`
+  * `high`
+* Optional `dueDate` and `description` fields
+* Auto-assigned `userId` from authenticated user
+* Centralized error handling for task operations
 
-### Prerequisites
+---
 
-- Node.js (v18 or higher)
-- PostgreSQL (v14 or higher)
+# 🚀 API Endpoints
 
-### Steps
+Base URL:
 
-### 1. Clone the repository:
-```bash
-git clone https://github.com/knmh/Task-Management-V2.git
-cd Task-Management-V2
+```text
+http://localhost:3000/api/v1
 ```
 
-### 2. Install dependencies:
+All endpoints require authentication (JWT token).
 
-```bash
-   npm install
+| Method | Endpoint     | Description                           | Auth Required |
+| ------ | ------------ | ------------------------------------- | ------------- |
+| GET    | `/tasks`     | Get all tasks of current user         | ✅             |
+| GET    | `/tasks/:id` | Get specific task (ownership checked) | ✅             |
+| POST   | `/tasks`     | Create a new task                     | ✅             |
+| PATCH  | `/tasks/:id` | Update a task (owner only)            | ✅             |
+| DELETE | `/tasks/:id` | Delete a task (owner only)            | ✅             |
+
+---
+
+# 📄 Request & Response Examples
+
+## 1. Get All Tasks
+
+### Request
+
+```http
+GET /api/v1/tasks
+Authorization: Bearer <your_token>
 ```
-### 3. Create a .env file based on the example below (update values to match your database settings):
 
-```bash
-   PORT=3000
-   NODE_ENV=development
-   DB_HOST=localhost
-   DB_PORT=5432
-   DB_USER=postgres
-   DB_PASSWORD=your_password
-   DB_NAME=taskmanager
-   JWT_ACCESS_SECRET=your_super_secret_key_change_this
+### Response (200 OK)
+
+```json
+{
+  "status": "success",
+  "results": 2,
+  "data": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Learn TypeORM",
+        "description": "Read documentation and practice",
+        "status": "pending",
+        "priority": "medium",
+        "dueDate": null,
+        "userId": 1,
+        "comments": []
+      },
+      {
+        "id": 2,
+        "title": "Build Task Manager API",
+        "description": "Complete the project",
+        "status": "in-progress",
+        "priority": "high",
+        "dueDate": "2025-12-31T23:59:59.000Z",
+        "userId": 1,
+        "comments": []
+      }
+    ]
+  }
+}
 ```
 
-### 4. Run migrations to create database tables:
+---
 
-```bash
-   npm run migrate:run
+# 2. Get Single Task
+
+### Request
+
+```http
+GET /api/v1/tasks/1
+Authorization: Bearer <your_token>
 ```
 
-> Note: If your database already contains tables, you may need to drop them first or temporarily set synchronize: true in data-source.ts (development only).
+### Response (200 OK)
 
-### 5. Start the development server:
- ```bash
-   npm run dev
+```json
+{
+  "status": "success",
+  "data": {
+    "task": {
+      "id": 1,
+      "title": "Learn TypeORM",
+      "description": "Read documentation and practice",
+      "status": "pending",
+      "priority": "medium",
+      "dueDate": null,
+      "userId": 1,
+      "comments": []
+    }
+  }
+}
 ```
-   Server runs at http://localhost:3000. Health check: GET /health.
 
+### Error Response (404 Not Found)
 
+```json
+{
+  "status": "fail",
+  "message": "Task not found"
+}
+```
 
-## PROJECT STRUCTURE
+---
 
-```tree
+# 3. Create Task
+
+### Request
+
+```http
+POST /api/v1/tasks
+Authorization: Bearer <your_token>
+Content-Type: application/json
+```
+
+### Body
+
+```json
+{
+  "title": "Learn TypeORM",
+  "description": "Read documentation and practice",
+  "status": "pending",
+  "priority": "medium",
+  "dueDate": "2025-12-31T23:59:59.000Z"
+}
+```
+
+### Response (201 Created)
+
+```json
+{
+  "status": "success",
+  "data": {
+    "task": {
+      "id": 3,
+      "title": "Learn TypeORM",
+      "description": "Read documentation and practice",
+      "status": "pending",
+      "priority": "medium",
+      "dueDate": "2025-12-31T23:59:59.000Z",
+      "userId": 1,
+      "comments": []
+    }
+  }
+}
+```
+
+---
+
+# 4. Update Task
+
+### Request
+
+```http
+PATCH /api/v1/tasks/1
+Authorization: Bearer <your_token>
+Content-Type: application/json
+```
+
+### Body
+
+```json
+{
+  "status": "completed",
+  "priority": "high"
+}
+```
+
+### Response (200 OK)
+
+```json
+{
+  "status": "success",
+  "data": {
+    "task": {
+      "id": 1,
+      "title": "Learn TypeORM",
+      "description": "Read documentation and practice",
+      "status": "completed",
+      "priority": "high",
+      "dueDate": null,
+      "userId": 1,
+      "comments": []
+    }
+  }
+}
+```
+
+---
+
+# 5. Delete Task
+
+### Request
+
+```http
+DELETE /api/v1/tasks/1
+Authorization: Bearer <your_token>
+```
+
+### Response (204 No Content)
+
+```json
+{
+  "status": "success",
+  "data": null
+}
+```
+
+### Error Response (403 Forbidden)
+
+```json
+{
+  "status": "fail",
+  "message": "You do not have permission"
+}
+```
+
+---
+
+# ⚠️ Error Handling
+
+| Status Code | Message                    | Description                                    |
+| ----------- | -------------------------- | ---------------------------------------------- |
+| 401         | You are not logged in      | Missing or invalid token                       |
+| 403         | You do not have permission | Trying to access another user's task           |
+| 404         | Task not found             | Task does not exist or belongs to another user |
+| 400         | Validation error           | Invalid input data                             |
+
+---
+
+# 📁 Project Structure (Related Files)
+
+```text
 src/
-├── config/          # Environment variables
-├── controllers/     # Auth, User, Task, Admin controllers
-├── entities/        # TypeORM models (User, Task)
-├── middleware/      # requiredAuth, requiredRole, errorHandler, notFound
-├── migrations/      # Migration files
-├── routes/          # API route definitions
-├── services/        # Business logic (UserService, AuthService, TasksService)
-├── types/           # Custom types (AuthRequest)
-├── utils/           # catchAsync helper
-├── app.ts           # Express app setup
-├── data-source.ts   # TypeORM database connection
-└── server.ts        # Entry point
+├── controllers/
+│   └── tasks.controller.ts       # Task controller
+│
+├── services/
+│   └── tasks.service.ts          # Task business logic
+│
+├── routes/
+│   └── tasks.routes.ts           # Task routes
+│
+├── entities/
+│   └── Task.ts                   # Task entity (status, priority)
+│
+├── middleware/
+│   └── requiredAuth.ts           # Authentication middleware
+│
+└── app.ts                        # Mount tasks routes
 ```
 
-## AUTHENTICATION & AUTHORIZATION
+---
 
-- Most routes require Authorization: Bearer <token> header (except /auth/signup and /auth/login).
-- User roles: user (default), moderator, admin.
-- Use requiredRole('admin', 'moderator') to restrict access.
+# 🧪 Testing with Thunder Client / Postman
 
-## TECHNICAL DOCUMENTATION
+## 1. Login First
 
+```http
+POST /api/v1/auth/login
+```
 
-### 1. Authentication (/auth)
+Body:
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/auth/signup` | Register a new user |
-| POST | `/auth/login` | Login, returns JWT |
+```json
+{
+  "email": "test@example.com",
+  "password": "123456"
+}
+```
 
+Copy the returned token.
 
+---
 
+## 2. Create a Task
 
-### 2. Users (`/users`)
+```http
+POST /api/v1/tasks
+```
 
-| Method | Endpoint | Description | Auth required |
-|--------|----------|-------------|---------------|
-| GET | `/users` | Get all users | ✅ (any logged-in user) |
-| GET | `/users/:id` | Get a single user | ✅ |
-| POST | `/users` | Create a user (simple signup) | ❌ |
-| PATCH | `/users/:id` | Update a user | ✅ |
-| DELETE | `/users/:id` | Delete a user | ✅ (admin only) |
+Header:
 
-### 3. Tasks (`/tasks`)
+```text
+Authorization: Bearer <token>
+```
 
-| Method | Endpoint | Description | Auth required |
-|--------|----------|-------------|---------------|
-| GET | `/tasks` | Get all tasks of the current user | ✅ |
-| GET | `/tasks/:id` | Get a task (ownership checked) | ✅ |
-| POST | `/tasks` | Create a new task (owner = current user) | ✅ |
-| PATCH | `/tasks/:id` | Update a task (owner only) | ✅ |
-| DELETE | `/tasks/:id` | Delete a task (owner only) | ✅ |
+Body:
 
-   Example request body for creating a task:
-   ```bash
-   {
-     "title": "Learn TypeORM",
-     "description": "Read documentation and practice",
-     "status": "PENDING",
-     "priority": "HIGH",
-     "dueDate": "2025-12-31T23:59:59.000Z"
-   }
- ```
+```json
+{
+  "title": "My first task",
+  "status": "pending"
+}
+```
 
-### 4. Admin (`/admin`)
+---
 
-| Method | Endpoint | Description | Auth required |
-|--------|----------|-------------|---------------|
-| PATCH | `/admin/users/:userId/role` | Change a user's role | ✅ + `admin` role |
-## TESTING WITH THUNDER CLIENT / POSTMAN
+## 3. Get All Tasks
 
-1. Create a new user: POST /auth/signup
-2. Login: POST /auth/login – copy the returned token.
-3. For subsequent requests, add header: Authorization: Bearer <your_token>
-4. Test endpoints for /users, /tasks, and /admin.
+```http
+GET /api/v1/tasks
+```
 
-## MIGRATIONS 
+Header:
 
-- Generate a migration after entity changes:
+```text
+Authorization: Bearer <token>
+```
+
+---
+
+## 4. Update Task
+
+```http
+PATCH /api/v1/tasks/1
+```
+
+Header:
+
+```text
+Authorization: Bearer <token>
+```
+
+Body:
+
+```json
+{
+  "status": "completed"
+}
+```
+
+---
+
+## 5. Delete Task
+
+```http
+DELETE /api/v1/tasks/1
+```
+
+Header:
+
+```text
+Authorization: Bearer <token>
+```
+
+---
+
+# 🔐 Ownership Logic
+
+Every task is automatically associated with the authenticated user.
+
+Example:
+
+```typescript
+const userId = req.user.id;
+
+const task = await taskService.create(
+  req.body,
+  userId
+);
+```
+
+All queries include `userId` filtering to ensure users can only access their own tasks:
+
+```typescript
+async findAll(userId: number) {
+    return await this.taskRepository.find({
+        where: {
+            userId
+        }
+    });
+}
+```
+
+---
+
+# 📌 Notes
+
+* This branch is independent from `feature/auth`.
+* It depends on the authentication module (`requiredAuth` middleware).
+* After merging into `main`, tasks will be protected by JWT authentication.
+
+---
+
+# 🚀 Git Commands
+
 ```bash
-  npm run migrate:generate
+# Switch to feature/task-crud branch
+git checkout feature/task-crud
+
+# Create README file
+touch README.md
+
+# Add file
+git add README.md
+
+# Commit
+git commit -m "docs(task): add README for task CRUD module"
+
+# Push to GitHub
+git push origin feature/task-crud
 ```
-- Run pending migrations:
-```bash
-  npm run migrate:run
-```
-- Revert the last migration:
- ```bash
-  npm run migrate:revert
-  ```
- > Note: For migrations to work, ensure your database schema is in sync with entities (or start with an empty database). Keep synchronize: false in data-source.ts.
 
-## FUTURE IMPROVEMENTS
+---
 
-- Input validation with zod
-- Comment module for task comments
-- Pagination & filtering for tasks
-- Logging with winston
-- Unit and integration tests
-
-## LICENSE
-
-ISC
-
-## AUTHOR
-
-Hediyeh Kianmehr
+Happy Coding! 🚀

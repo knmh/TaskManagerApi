@@ -5,11 +5,19 @@ import { catchAsync } from '../utils/catchAsync'
 const authService = new AuthService()
 
 export const authController = {
+<<<<<<< HEAD
     
     signup: catchAsync(async (req: Request, res: Response, next: NextFunction) => {
         const { username, email, password } = req.body
 
         
+=======
+    // ثبت‌نام
+    signup: catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+        const { username, email, password } = req.body
+
+        // اعتبارسنجی ساده
+>>>>>>> feature/user-crud
         if (!username || !email || !password) {
             return res.status(400).json({
                 status: 'fail',
@@ -33,7 +41,11 @@ export const authController = {
         })
     }),
 
+<<<<<<< HEAD
     
+=======
+    // ورود
+>>>>>>> feature/user-crud
     login: catchAsync(async (req: Request, res: Response, next: NextFunction) => {
         const { email, password } = req.body
 

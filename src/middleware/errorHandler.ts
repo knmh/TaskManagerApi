@@ -2,7 +2,11 @@ import { Request, Response, NextFunction } from 'express'
 
 export class AppError extends Error {
     statusCode: number
+<<<<<<< HEAD
     status: string 
+=======
+    status: string
+>>>>>>> feature/user-crud
     isOperational: boolean
 
     constructor(message: string, statusCode: number) {

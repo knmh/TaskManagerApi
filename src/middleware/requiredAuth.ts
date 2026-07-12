@@ -1,5 +1,9 @@
 import { Response, NextFunction } from 'express'
 import { AuthRequest } from '../types'
+<<<<<<< HEAD
+=======
+
+>>>>>>> feature/user-crud
 import { AuthService } from '../services/auth.service'
 import { AppError } from './errorHandler'
 
@@ -14,7 +18,11 @@ export const requiredAuth = async (req: AuthRequest, res: Response, next: NextFu
         }
 
         if (!token) {
+<<<<<<< HEAD
             throw new AppError('You are not logged in', 401)
+=======
+            throw new AppError('شما وارد نشده اید', 401)
+>>>>>>> feature/user-crud
         }
 
         const decoded = authService.verifyToken(token)
